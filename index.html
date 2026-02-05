@@ -1,0 +1,445 @@
+---
+layout: default
+title: Status page
+---
+
+<meta name="description" content="{{ site.description }}"/>
+
+{% for post in site.posts %}
+    {% if post.action == 'notification' %}
+        {% assign postValidToDateInSeconds = post.validToDate | date: "%s" | plus: 0 %}
+        {% assign nowInSeconds = "now" | date: "%s" | plus: 0 %}
+        {% if postValidToDateInSeconds > nowInSeconds %}
+            <div class="post mainStatus maintenancePost">
+                <div class="flex">
+                    <div class="warning-icon">
+                        <object class="state-icon" type="image/svg+xml" data="../img/warning.svg">
+                        </object>
+                    </div>
+                    <div class="tags">
+                        <div class="scheduled-title">
+                            <a href="{{ post.url }}" class=" {{ service.slug }}">
+                                {{ post.title }}
+                            </a>
+                        </div>
+                        <div class="scheduled-date">
+                            <a href="{{ post.url }}">
+                                {{ post.subtitle }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex learn-more-text">
+                    <a href="{{ post.url }}">
+                        Learn more details
+                    </a>
+                    <object class="more-icon" type="image/svg+xml" data="../img/read more.svg"></object>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+{% assign actualOutageIncidents = 0 %}
+{% assign actualDegradationIncidents = 0 %}
+{% for post in site.posts %}
+    {% if post.status contains 'investigating' or post.status contains 'update' %}
+        {% if post.resolvedDate %}
+        {% else %}
+            {% if post.severity == "outage" %}
+                {% assign actualOutageIncidents = actualOutageIncidents | plus: 1 %}
+            {% else %}
+                {% assign actualDegradationIncidents = actualDegradationIncidents | plus: 1 %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+{% if actualOutageIncidents > 0 %}
+    <div class="mainStatus outage">
+        <div class="outage-image">
+            <div class="outage-icon"></div>
+        </div>
+        <div class="tags scheduled-title">There is outage of one or more services.</div>
+    </div>
+    {% assign overallSeverity = "outage" %}
+{% else %}
+    {% if actualDegradationIncidents > 0 %}
+        <div class="mainStatus degradation">
+            <div class="outage-image">
+                <div class="degradation-icon"></div>
+            </div>
+            <div class="tags scheduled-title">There is degradation on one or more services.</div>
+        </div>
+        {% assign overallSeverity = "degradation" %}
+    {% else %}
+        <div class="post mainStatus normal">
+            <div class="flex">
+                <div>
+                    <div class="ok-icon"></div>
+                </div>
+                <div class="tags-work-state"><p class="scheduled-title">All works fine.</p></div>
+            </div>
+
+        </div>
+        {% assign overallSeverity = "normal" %}
+    {% endif %}
+{% endif %}
+
+<div class="index-system">
+    <div class="index-heading">
+        <h3>
+            All Services Last {{ site.uptime_days }} Days
+        </h3>
+        <div class="serviceStatus {{ overallSeverity }}">
+            {{ overallSeverity }}
+        </div>
+    </div>
+
+    <div class="uptime" style="display: none">
+        {% assign selectedPosts = site.posts | where: "services", service.slug %}
+        {% assign timeFrameInSeconds = 1 | times: 60 | times: 60 | times: 24 | times: site.uptime_days %}
+        {% assign recentPostsToDate = "now" | date: "%Y-%m-%d 23:59:59" %}
+        {% assign recentPostsTo = recentPostsToDate | date: "%s" | plus: 0 %}
+        {% assign recentPostsFrom = recentPostsTo | minus: timeFrameInSeconds %}
+        {% for post in selectedPosts limit: 100 %}
+            {% assign postDateInSeconds = post.date | date: "%s" | plus: 0 %}
+            {% if postDateInSeconds > recentPostsFrom and postDateInSeconds <= recentPostsTo %}
+                {% if post.action != "notification" %}
+                    {% assign stop = post.resolvedDate | date: '%s' %}
+                    {% assign start = post.date | date: '%s' %}
+                    {% assign secondsSince = stop | minus: start %}
+                    {% assign minutesSince = secondsSince | divided_by: 60 %}
+                    {% assign minutes = minutesSince | modulo: 60 %}
+                    {% assign hoursSince = minutesSince | divided_by: 60 %}
+                    <span class="{{ post.severity }}"
+                          data-severity="{{ post.severity }}"
+                          data-date="{{ post.date | date_to_xmlschema }}"
+                          data-dateto="{{ post.resolvedDate | date_to_xmlschema }}"
+                          data-minutes="{{ minutes }}"
+                          data-hours="{{ hoursSince }}">
+                        </span>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    </div>
+    <div class="uptime-scale">
+    <span>
+        {{ site.uptime_days }} Days Ago
+    </span>
+        <span>
+        Today
+    </span>
+    </div>
+</div>
+
+{% for service in site.data.services %}
+    {% if service.system %}
+        <div class="index-system">
+            <div class="index-heading">
+                <h3>
+                    {{ service.name }}
+                    <span class="serviceDescription">
+                    <span class="serviceDescriptionLabel">
+                        {{ service.description }}
+                    </span>
+                </span>
+                </h3>
+                {% assign selectedPosts = site.posts | where: "services", service.slug %}
+                {% assign serviceStatus = "normal" %}
+                {% for post in selectedPosts %}
+                    {% if post.status contains 'investigating' or post.status contains 'update' %}
+                        {% if post.resolvedDate %}
+                        {% else %}
+                            {% if post.severity == "outage" %}
+                                {% assign serviceStatus = "outage" %}
+                            {% else %}
+                                {% if serviceStatus == "normal" %}
+                                    {% assign serviceStatus = "degradation" %}
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                <div class="serviceStatus {{ serviceStatus }}">
+                    {{ serviceStatus }}
+                </div>
+            </div>
+            <div class="uptime" style="display: none">
+                {% assign selectedPosts = site.posts | where: "services", service.slug %}
+                {% assign timeFrameInSeconds = 1 | times: 60 | times: 60 | times: 24 | times: site.uptime_days %}
+                {% assign recentPostsToDate = "now" | date: "%Y-%m-%d 23:59:59" %}
+                {% assign recentPostsTo = recentPostsToDate | date: "%s" | plus: 0 %}
+                {% assign recentPostsFrom = recentPostsTo | minus: timeFrameInSeconds %}
+                {% for post in selectedPosts limit: 100 %}
+                    {% assign postDateInSeconds = post.date | date: "%s" | plus: 0 %}
+                    {% if postDateInSeconds > recentPostsFrom and postDateInSeconds <= recentPostsTo %}
+                        {% if post.action != "notification" %}
+                            {% assign stop = post.resolvedDate | date: '%s' %}
+                            {% assign start = post.date | date: '%s' %}
+                            {% assign secondsSince = stop | minus: start %}
+                            {% assign minutesSince = secondsSince | divided_by: 60 %}
+                            {% assign minutes = minutesSince | modulo: 60 %}
+                            {% assign hoursSince = minutesSince | divided_by: 60 %}
+                            <span class="{{ post.severity }}"
+                                  data-severity="{{ post.severity }}"
+                                  data-date="{{ post.date | date_to_xmlschema }}"
+                                  data-dateto="{{ post.resolvedDate | date_to_xmlschema }}"
+                                  data-minutes="{{ minutes }}"
+                                  data-hours="{{ hoursSince }}">
+                        </span>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="uptime-scale">
+            <span>
+                {{ site.uptime_days }} Days Ago
+            </span>
+                <span>
+                Today
+            </span>
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}
+
+<div class="incidents-margin">
+    <div class="index-heading timelineDayIncidents">
+        <div class="flex past-incidents">
+            <div class="poppins-18-bold">Past Incidents</div>
+        </div>
+        <div class="view-archive view-archive-padding open-sans-14">
+            <a href="/archive">View Archive</a>
+            <button onclick="window.location.href='/archive'"></button>
+        </div>
+    </div>
+
+    {% assign lastDaysCount = 13 %}
+    {% assign timeFrameInSeconds = 1 | times: 60 | times: 60 | times: 24 | times: lastDaysCount %}
+    {% assign recentPostsToDate = "now" | date: "%Y-%m-%d 23:59:59" %}
+    {% assign recentPostsTo = recentPostsToDate | date: "%s" | plus: 0 %}
+    {% assign dayInSeconds = 1 | times: 60 | times: 60 | times: 24 %}
+
+    <div id="posts" class="posts">
+        {% for i in (1..lastDaysCount) %}
+            {% assign recentPostsFrom = recentPostsTo | minus: dayInSeconds %}
+            <div class="timelineDay ">
+                <div class="timeline-padding">
+                    <div class="timelineDate">
+                        {{ recentPostsTo | date: "%Y-%m-%d" }}
+                    </div>
+                    {% assign dayCount = 0 %}
+                    {% for post in site.posts limit: 30 %}
+                        {% assign postDateInSeconds = post.date | date: "%s" | plus: 0 %}
+                        {% if postDateInSeconds > recentPostsFrom and postDateInSeconds <= recentPostsTo %}
+                            {% if post.services contains "maintenance" %}
+                            {% else %}
+                                {% assign dayCount = dayCount | plus: 1 %}
+                                <div class="post-description">
+                                    <div class="post {{ post.action }}">
+                                        <div class="poppins-18-bold post-description-title {{ post.severity }}">
+                                            <a href="{{ post.url }}">{{ post.title }}</a>
+                                        </div>
+                                        <div class="clusters">
+                                            <div class="severityTag {{ post.severity }}">
+                                                {{ post.severity }}
+                                            </div>
+                                            {% for cluster in post.clusters %}
+                                                <span class="clusterTag">
+                                                   {% assign clusterDetails = site.data.clusters | where: "slug", cluster %}
+                                                    {% for clusterDetail in clusterDetails %}
+                                                        {{ clusterDetail.name }}
+                                                    {% endfor %}
+                                                </span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% if post.resolvedDate %}
+                                        {% assign stop = post.resolvedDate | date: '%s' %}
+                                        {% assign start = post.date | date: '%s' %}
+                                        {% assign secondsSince = stop | minus: start %}
+                                        {% assign minutesSince = secondsSince | divided_by: 60 %}
+                                        {% assign minutes = minutesSince | modulo: 60 %}
+                                        {% assign hoursSince = minutesSince | divided_by: 60 %}
+                                        {% assign daysSince = hoursSince | divided_by: 24 %}
+                                        <div class="post-resolved ">
+                                            <span>Resolved in {{ hoursSince }} hours and {{ minutes }} minutes</span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="incidentItems">
+                                        {% for state in post.incident_states reversed %}
+                                            {% if state.status == "investigating" %}
+                                                <div class="incidentItem">
+                                                    <div class="open-sans-18 incidentItemStatus {{ state.status }}">{{ state.status }}</div>
+                                                    <div class="open-sans-18 incidentItemContent">{{ state.content }}</div>
+                                                    <div class="incidentItemDate">{{ post.date | date: "%Y-%m-%d %H:%M" }}</div>
+                                                </div>
+                                            {% endif %}
+                                            {% if state.status == "update" and state.date %}
+                                                <div class="incidentItem">
+                                                    <div class="open-sans-18 incidentItemStatus {{ state.status }}">{{ state.status }}</div>
+                                                    <div class="open-sans-18 incidentItemContent">{{ state.content }}</div>
+                                                    <div class="incidentItemDate">{{ state.date }}</div>
+                                                </div>
+                                            {% endif %}
+                                            {% if state.status == "resolved" and post.resolvedDate %}
+                                                <div class="incidentItem">
+                                                    <div class="open-sans-18 incidentItemStatus {{ state.status }}">{{ state.status }}</div>
+                                                    <div class="open-sans-18 incidentItemContent">{{ state.content }}</div>
+                                                    <div class="incidentItemDate">{{ post.resolvedDate }}</div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if dayCount == 0 %}
+                        {% if i == 1 %}
+                            <div class="noIncidentThisDay">
+                                No incident today.
+                            </div>
+                        {% else %}
+                            <div class="noIncidentThisDay">
+                                No incident this day.
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    {% assign recentPostsTo = recentPostsFrom %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+<div class="flex-center button-view-padding">
+    <div>
+        <input class="button-view-full-archive open-sans-14-bold" type="button" onclick="location.href='/archive/';"
+               value="View full archive"/>
+    </div>
+</div>
+<script>
+    function toISOLocal(d) {
+        var z = n => ('0' + n).slice(-2);
+        var zz = n => ('00' + n).slice(-3);
+        var off = d.getTimezoneOffset();
+        var sign = off < 0 ? '+' : '-';
+        off = Math.abs(off);
+
+        return d.getFullYear() + '-'
+            + z(d.getMonth() + 1) + '-' +
+            z(d.getDate()) + 'T' +
+            z(d.getHours()) + ':' +
+            z(d.getMinutes()) + ':' +
+            z(d.getSeconds()) + '.' +
+            zz(d.getMilliseconds()) +
+            sign + z(off / 60 | 0) + ':' + z(off % 60);
+    }
+
+    function getDiffDates(from, to) {
+        var diffMs = (to - from);
+        var diffHrs = Math.floor(diffMs / 3600000); // hours
+        var diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000); // minutes
+        return {hours: diffHrs, minutes: diffMins};
+    }
+
+    (function () {
+        var wrappers = document.querySelectorAll('.uptime'),
+            span = false,
+            n = new Date(),
+            day = (1000 * 60 * 60 * 24),
+            o = new Date(n.getTime() - day * ({{ site.uptime_days }})),
+            diff = Math.floor((n.getTime() - o.getTime()) / day),
+            i, j = 0;
+
+        for (w = 0; w < wrappers.length; w++) {
+            var posts = wrappers[w].querySelectorAll('span');
+
+            for (j = diff; j >= 0; j--) {
+                span = document.createElement('span');
+                n = (new Date(o.getTime() + day * (diff - j)));
+                span.title = n.toDateString();
+                span.setAttribute('data-date', n.toJSON().slice(0, 10));
+                wrappers[w].append(span);
+                dayStatus = document.createElement('span');
+                dayStatus.classList.add("statusPopup");
+                dayStatusTitle = document.createElement('p');
+                dayStatusTitle.innerHTML = n.toDateString();
+                dayStatus.append(dayStatusTitle);
+                dayStatusText = document.createElement('span');
+                dayStatusText.innerHTML = "Without incident";
+                dayStatusText.classList.add("status");
+                dayStatus.append(dayStatusText);
+                span.append(dayStatus);
+            }
+
+            for (i = 0; i < posts.length; i++) {
+                fromDate = (new Date(posts[i].dataset.date));
+
+                if (posts[i].dataset.dateto) {
+                    toDate = (new Date(posts[i].dataset.dateto));
+                } else {
+                    toDate = (new Date());
+                }
+
+                dayItem = wrappers[w].querySelector('[data-date="' + posts[i].dataset.date.slice(0, 10) + '"]');
+                if (dayItem == undefined) {
+                    continue;
+                }
+                dayStatus = dayItem.querySelector('.statusPopup');
+                noIncident = dayStatus.querySelector('.status');
+
+                if (noIncident) {
+                    dayStatus.removeChild(noIncident);
+                }
+
+                let tempTo = new Date();
+                if (fromDate.getFullYear() === toDate.getFullYear() &&
+                    fromDate.getMonth() === toDate.getMonth() &&
+                    fromDate.getDate() === toDate.getDate()) {
+                    tempTo = toDate;
+                } else {
+                    let toMidnight = new Date(fromDate.getTime());
+                    toMidnight.setDate(toMidnight.getDate() + 1);
+                    toMidnight.setHours(0, 0, 0, 0);
+                    tempTo = toMidnight;
+                }
+                timeDiff = getDiffDates(fromDate, tempTo);
+
+                if (dayItem) {
+                    dayStatusIncidentLabel = document.createElement('span');
+                    dayStatusIncidentLabel.classList.add("label");
+                    dayStatusIncidentLabel.innerHTML = posts[i].dataset.severity;
+                    dayStatusIncidentHours = document.createElement('span');
+                    dayStatusIncidentHours.classList.add("hours");
+                    dayStatusIncidentHours.innerHTML = timeDiff.hours + " hrs";
+                    dayStatusIncidentMinutes = document.createElement('span');
+                    dayStatusIncidentMinutes.classList.add("minutes");
+                    dayStatusIncidentMinutes.innerHTML = timeDiff.minutes + " mins";
+                    dayStatusIncident = document.createElement('div');
+                    dayStatusIncident.classList.add("incident");
+                    dayStatusIncident.classList.add(posts[i].dataset.severity);
+                    dayStatusIncident.append(dayStatusIncidentLabel);
+                    dayStatusIncident.append(dayStatusIncidentHours);
+                    dayStatusIncident.append(dayStatusIncidentMinutes);
+                    dayStatus.append(dayStatusIncident);
+                    dayItem.classList.add(posts[i].dataset.severity);
+                }
+
+                if (fromDate.getFullYear() === toDate.getFullYear() &&
+                    fromDate.getMonth() === toDate.getMonth() &&
+                    fromDate.getDate() === toDate.getDate()) {
+                    wrappers[w].removeChild(posts[i]);
+                } else {
+                    var tomorrow = new Date(fromDate.getTime());
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    tomorrow.setHours(0, 0, 0, 0);
+                    posts[i].dataset.date = toISOLocal(tomorrow);
+                    i--;
+                }
+            }
+            wrappers[w].style.display = '';
+        }
+    })();
+</script>

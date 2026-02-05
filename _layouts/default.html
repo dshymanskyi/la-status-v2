@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+{% assign servicesStatus = "normal" %}
+{% for post in site.posts %}
+    {% if post.status contains 'investigating' or post.status contains 'update' %}
+        {% if post.resolvedDate %}
+        {% else %}
+            {% if post.severity == "outage" %}
+                {% assign servicesStatus = "outage" %}
+            {% else %}
+                {% if servicesStatus == "normal" %}
+                    {% assign servicesStatus = "degradation" %}
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>{{ page.title }} - {{ servicesStatus }}</title>
+    <meta name="author" content="{{ site.author }}"/>
+    <link href="rss.xml" rel="alternate" title="{{ site.title }} - {{ servicesStatus }}" type="application/xml"/>
+    <link rel="stylesheet" href="/css/styles.css" type="text/css" media="screen, projection"/>
+    <link rel="shortcut icon" type="image/ico" href="/{{ servicesStatus }}.ico"/>
+    <meta name="msapplication-TileColor" content="#ffffff"/>
+    <meta name="msapplication-TileImage" content="/{{ servicesStatus }}.ico"/>
+    <link rel="apple-touch-icon" href="/{{ servicesStatus }}.ico"/>
+    <meta content="/{{ servicesStatus }}.ico" name="twitter:image" property="og:image"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T9HBB9KMVK"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-T9HBB9KMVK');
+    </script>
+</head>
+<body class="markdown-body {{ servicesStatus }}">
+<div class="header">
+    <div class="topright">
+        <div class="flex">
+            <div class="logo"></div>
+            <div class="site-title">
+                <a href="/">LiveAgent</a>
+                <a href="/">Services Status</a>
+            </div>
+        </div>
+        <div id="menu-icon" class="menu-icon"><span></span></div>
+        <div id="menu-items" class="menu-items">
+            <div class="menu-item">
+                <a href="https://www.liveagent.com/" title="Subscribe to the RSS feed" rel="alternate">Product</a>
+            </div>
+            <div class="menu-item">
+                <a href="https://dev.ladesk.com/" title="Subscribe to the RSS feed" rel="alternate">Changelog</a>
+            </div>
+            <div class="menu-item">
+                <a href="https://support.liveagent.com/" title="Subscribe to the RSS feed" rel="alternate">Help</a>
+            </div>
+            <div class="menu-item">
+                <div class="rss-icon"></div>
+                <a href="/rss.xml" title="Subscribe to the RSS feed" rel="alternate">RSS</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="header-image">
+    <div class="statusImage"></div>
+</div>
+
+<div class="main">{{ content }}</div>
+
+<footer>
+    <div class="status-footer">
+        <div class="all-rights">
+            <object class="copyright-icon" type="image/svg+xml" data="/img/copyright.svg"></object>
+            <a href="https://www.qualityunit.com/">2004-{{ site.time | date: '%Y' }} QualityUnit.com, All rights reserved</a>
+        </div>
+        <div class="terms-conditions">
+            <div><a href="https://www.liveagent.com/terms-and-conditions/">Terms & Conditions</a></div>
+            <div><a href="https://www.liveagent.com/security-privacy-policy/">Security Policy</a></div>
+            <div><a href="https://www.liveagent.com/privacy-policy/">Privacy Policy</a></div>
+            <div>
+                <a href="/">Auto refresh </a>
+                <label class="switch">
+                    <input type="checkbox" onclick="toggleAutoRefresh(this);" id="reloadCB">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+</footer>
+<script type="text/javascript">
+    let menuIcon = document.getElementById('menu-icon');
+    let menuItems = document.getElementById('menu-items');
+    menuIcon.addEventListener('click', function () {
+        menuItems.classList.toggle('nav-active');
+        menuIcon.classList.toggle('menu-close');
+    });
+
+    let reloading;
+
+    function checkReloading() {
+        if (window.location.hash === "#autoreload") {
+            reloading = setTimeout("window.location.reload();", 30000);
+            document.getElementById("reloadCB").checked = true;
+        }
+    }
+
+    function toggleAutoRefresh(cb) {
+        if (cb.checked) {
+            window.location.replace("#autoreload");
+            reloading = setTimeout("window.location.reload();", 30000);
+        } else {
+            window.location.replace("#");
+            clearTimeout(reloading);
+        }
+    }
+
+    window.onload = checkReloading;
+</script>
+</body>
+</html>

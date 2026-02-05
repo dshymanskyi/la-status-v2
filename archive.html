@@ -1,0 +1,87 @@
+---
+layout: default
+title: Archive
+---
+<div class="archive"><h1>Archive</h1></div>
+<div class="back-to-list-archive">
+    <div class="view-archive open-sans-14">
+        <a href="/">Back to list</a>
+        <button onclick="window.location.href='/archive'"></button>
+    </div>
+</div>
+<div id="posts" class="posts">
+    {% for post in site.posts %}
+        <div class="post-archive {{ post.action }}">
+            <div class="date-archive open-sans-16">{{ post.date | date_to_string }}</div>
+            <div>
+                <div class=" {{ post.action }}">
+                    <div class="poppins-18-bold post-description-title {{ post.severity }}">
+                        <a href="{{ post.url }}">{{ post.title }}</a>
+                    </div>
+                    <div class="clusters-archive">
+                        <div class="severityTag {{ post.severity }}">
+                            {{ post.severity }}
+                        </div>
+                        {% for cluster in post.clusters %}
+                            <span class="clusterTag">
+                                                   {% assign clusterDetails = site.data.clusters | where: "slug", cluster %}
+                                {% for clusterDetail in clusterDetails %}
+                                    {{ clusterDetail.name }}
+                                {% endfor %}
+                                </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if post.resolvedDate %}
+                    {% assign stop = post.resolvedDate | date: '%s' %}
+                    {% assign start = post.date | date: '%s' %}
+                    {% assign secondsSince = stop | minus: start %}
+                    {% assign minutesSince = secondsSince | divided_by: 60 %}
+                    {% assign minutes = minutesSince | modulo: 60 %}
+                    {% assign hoursSince = minutesSince | divided_by: 60 %}
+                    {% assign daysSince = hoursSince | divided_by: 24 %}
+                    <div class="post-resolved ">
+                        <span>Resolved in {{ hoursSince }} hours and {{ minutes }} minutes</span>
+                    </div>
+                {% endif %}
+                <div class="incidentItems">
+                    {% for state in post.incident_states reversed %}
+                        {% if state.status == "investigating" %}
+                            <div class="incidentItem">
+                                <div class="open-sans-18 incidentItemStatus {{ state.status }}">{{ state.status }}</div>
+                                <div class="open-sans-18 incidentItemContent">{{ state.content }}</div>
+                                <div class="incidentItemDate">{{ post.date | date: "%Y-%m-%d %H:%M" }}</div>
+                            </div>
+                        {% endif %}
+                        {% if state.status == "update" and state.date %}
+                            <div class="incidentItem">
+                                <div class="open-sans-18 incidentItemStatus {{ state.status }}">{{ state.status }}</div>
+                                <div class="open-sans-18 incidentItemContent">{{ state.content }}</div>
+                                <div class="incidentItemDate">{{ state.date }}</div>
+                            </div>
+                        {% endif %}
+                        {% if state.status == "resolved" and post.resolvedDate %}
+                            <div class="incidentItem">
+                                <div class="open-sans-18 incidentItemStatus {{ state.status }}">{{ state.status }}</div>
+                                <div class="open-sans-18 incidentItemContent">{{ state.content }}</div>
+                                <div class="incidentItemDate">{{ post.resolvedDate }}</div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    {% if post.action == "notification" %}
+                        <div class="indcidentItem">
+                            <div class="open-sans-18 incidentItemContent">{{ post.subtitle }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+<div class="flex-center button-view-padding">
+    <div>
+        <input class="button-view-full-archive open-sans-14-bold" type="button" onclick="location.href='/';"
+               value="Back to list">
+    </div>
+</div>
+</div>

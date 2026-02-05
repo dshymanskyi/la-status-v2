@@ -1,0 +1,16 @@
+- slug: admin
+  system: true
+  name: Admin panel
+  description: Login, logout
+- slug: calls
+  system: true
+  name: Call and video
+  description: Call and video description
+- slug: tickets
+  system: true
+  name: Ticket operations
+  description: Ticket filters, ticket search, loading of ticket detail
+- slug: emails
+  system: true
+  name: Email services
+  description: Sending and receiving emails

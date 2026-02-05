@@ -1,0 +1,21 @@
+---
+layout: null
+---
+{%- assign outages = '' -%}
+{%- assign degradations = '' -%}
+{%- for post in site.posts -%}
+  {%- if post.status contains 'investigating' or post.status contains 'update' -%}
+    {%- if post.resolvedDate -%}
+    {%- else -%}
+      {%- capture incident -%}
+        {"title":{{ post.title | jsonify }},"date":{{ post.date | jsonify }},"clusters":{{ post.clusters | jsonify }},"services":{{ post.services | jsonify }}}
+      {%- endcapture -%}
+      {%- if post.severity == "outage" -%}
+        {%- assign outages = outages | append: ',' | append: incident -%}
+      {%- else -%}
+        {%- assign degradations = degradations | append: ',' | append: incident -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+{"outages":[{{ outages | remove_first: ',' }}], "degradations": [{{ degradations | remove_first: ',' }}]}

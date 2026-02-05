@@ -1,0 +1,23 @@
+# url: https://status.liveagent.com
+url: https://qualityunit.github.io/LiveAgent-status/
+author: QualityUnit
+email: support@liveagent.com
+title: LiveAgent Services Status
+description: The status page for the LiveAgent services
+homepage: https://www.liveagent.com
+
+permalink: pretty
+uptime_days: 90
+
+# TODO: Build pagination into archive
+plugins: [jekyll-paginate]
+paginate: 2
+exclude: [vendor]
+paginate_path: '/archive/page:num/'
+
+kramdown:
+  parse_block_html: true
+
+sass:
+  sass_dir:         _scss
+  style:            compressed

@@ -1,0 +1,109 @@
+---
+layout: default
+---
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:site" content="@{{ site.author }}"/>
+<meta name="twitter:title" content="{{ page.title }}"/>
+<meta name="twitter:description" content="{{ page.date | date_to_string }}"/>
+<meta name="twitter:image" content="{{ site.url }}/{{ servicesStatus }}.ico"/>
+<meta name="twitter:url" content="{{ page.url }}"/>
+<meta property="og:title" content="{{ page.title }}"/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="{{ page.url }}"/>
+<meta property="og:image" content="{{ site.url }}/{{ servicesStatus }}.ico"/>
+<meta property="og:site_name" content="{{ site.title }}"/>
+
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <div class="incident-detail">
+        <meta itemprop="author" content="{{ site.author }}"/>
+        <div class="incident-detail-title">{{ page.title }}</div>
+
+        <div class="post-detail-description">
+            <div class="post-detail {{ post.action }}">
+
+                <div class="clusters">
+                    <div class="severityTag {{ page.severity }}">
+                        {{ page.severity }}
+                    </div>
+                    {% for cluster in page.clusters %}
+                        <span class="clusterTag">
+                                                   {% assign clusterDetails = site.data.clusters | where: "slug", cluster %}
+                            {% for clusterDetail in clusterDetails %}
+                                {{ clusterDetail.name }}
+                            {% endfor %}
+                                                </span>
+                    {% endfor %}
+                </div>
+
+                <div class="services">
+                    {% for post_tag in page.services %}
+                        {% for data_tag in site.data.services %}
+                            {% if data_tag.slug == post_tag %}
+                                {% assign service = data_tag %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if service %}
+                            <span class="serviceTag {{ service.slug }}">
+                    {{ service.name }}
+                </span>
+                        {% else %}
+                            <span class="serviceTag {{ post_tag }}">
+                    {{ post_tag }}
+                </span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% if page.resolvedDate %}
+                {% assign stop = page.resolvedDate | date: '%s' %}
+                {% assign start = page.date | date: '%s' %}
+                {% assign secondsSince = stop | minus: start %}
+                {% assign minutesSince = secondsSince | divided_by: 60 %}
+                {% assign minutes = minutesSince | modulo: 60 %}
+                {% assign hoursSince = minutesSince | divided_by: 60 %}
+                {% assign daysSince = hoursSince | divided_by: 24 %}
+                <div class="post-detail-resolved">
+                    <span>Resolved in {{ hoursSince }} hours and {{ minutes }} minutes</span>
+                </div>
+            {% endif %}
+            <div class="incidentItems">
+                {% for state in page.incident_states %}
+                    {% if state.status == "investigating" %}
+                        <div class="incidentItem">
+                            <div class="open-sans-18 incidentItemStatus {{ state.status }}">{{ state.status }}</div>
+                            <div class="open-sans-18 incidentItemContent">{{ state.content }}</div>
+                            <div class="incidentItemDate">{{ page.date | date: "%Y-%m-%d %I:%M" }}</div>
+                        </div>
+                    {% endif %}
+                    {% if state.status == "update" and state.date %}
+                        <div class="incidentItem">
+                            <div class="open-sans-18 incidentItemStatus {{ state.status }}">{{ state.status }}</div>
+                            <div class="open-sans-18 incidentItemContent">{{ state.content }}</div>
+                            <div class="incidentItemDate">{{ state.date }}</div>
+                        </div>
+                    {% endif %}
+                    {% if state.status == "resolved" and page.resolvedDate %}
+                        <div class="incidentItem">
+                            <div class="open-sans-18 incidentItemStatus {{ state.status }}">{{ state.status }}</div>
+                            <div class="open-sans-18 incidentItemContent">{{ state.content }}</div>
+                            <div class="incidentItemDate">{{ page.resolvedDate }}</div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% assign testContent = content | strip_newlines %}
+            {% if testContent != "" %}
+                <div class="content" itemprop="articleBody">
+                    {{ content }}
+                </div>
+            {% endif %}
+        </div>
+        <div class="flex-center button-view-padding">
+            <div>
+                <input class="button-view-full-archive open-sans-14-bold" type="button" onclick="location.href='/archive/';"
+                       value="Back to list">
+            </div>
+        </div>
+    </div>
+</article>
