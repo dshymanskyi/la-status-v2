@@ -1,5 +1,6 @@
 # url: https://status.liveagent.com
-url: https://dshymanskyi.github.io/la-status-v2/
+url: https://dshymanskyi.github.io/la-status-v2
+baseurl: /la-status-v2
 
 permalink: pretty
 uptime_days: 90
