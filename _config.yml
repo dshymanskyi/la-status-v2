@@ -1,10 +1,5 @@
 # url: https://status.liveagent.com
-url: https://qualityunit.github.io/LiveAgent-status/
-author: QualityUnit
-email: support@liveagent.com
-title: LiveAgent Services Status
-description: The status page for the LiveAgent services
-homepage: https://www.liveagent.com
+url: https://dshymanskyi.github.io/la-status-v2/
 
 permalink: pretty
 uptime_days: 90
